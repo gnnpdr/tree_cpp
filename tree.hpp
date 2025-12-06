@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <queue>
 
 enum Colour     //сделать неймспейс для этого, поднеймспейс неймспейса дерева
 {
@@ -12,34 +13,109 @@ template <typename KeyT = int>
 struct Node
 {
     KeyT key_;
-    Node* parent_ = nullptr, left_ = nullptr, right_ = nullptr;
+    Node<KeyT>* parent_ = nullptr;
+    Node<KeyT>* left_ = nullptr;
+    Node<KeyT>* right_ = nullptr;
     Colour colour_ = RED;
 
-    Node(KeyT key) : key_(key) {}; 
+    Node() : key_{} {};
+    explicit Node(const KeyT& key) : key_(key) {};                              //!!не Node<KeyT>
+    Node(const Node& other) : key_(other.key_), colour_(other.colour_) {};
+
+    Node& operator=(const Node& other)
+    {
+        if (this != &other)         //!!
+        {
+            key_ = other.key_;
+            colour_ = other.colour_;
+        }
+        return *this;
+    }
 
     ~Node()
     {
-        delete(left_);
-        delete(right_);
+        left_ = nullptr;
+        right_ = nullptr;
+    }
+
+    void print_node()
+    {
+        std::cout << "// key " << key_ << ", colour " << colour_ << "//" << std::endl; 
     }
 };
 
 template <typename KeyT = int>
 class RBTree
 {
-    Node* root_ = nullptr;
 public:
-    using KeyT = KeyT;
+    Node<KeyT>* root_ = nullptr;
 
-    RBTree(Node<KeyT>* root) : root_(root) {};
-    ~RBTree()
+    RBTree() {};
+    explicit RBTree(Node<KeyT>* root) : root_(root) {};
+
+    RBTree(const RBTree& other)
     {
-        delete(root_);
+        if (other.root_)
+            root_ = copy_tree(other.root_, nullptr);
+        else
+            root_ = nullptr;
     }
 
-    //надо сделать другие элементы биг 5, тк у нас тут указатели
+    RBTree& operator=(const RBTree& other)
+    {
+        if (this != &other)
+        {
+            RBTree tmp(other);
+            std::swap(root_, tmp.root_);        //!copy_cnd_swap идиома
+        }
+        return *this;
+    }
 
+    ~RBTree()
+    {
+        safe_delete(root_);
+    }
 private:
+
+    void safe_delete(Node<KeyT>* root)      //здесь надо <KeyT>
+    {
+        if (!root)
+            return;
+        std::queue<Node<KeyT>*> nodes;
+        nodes.push(root);
+
+        while (!nodes.empty())
+        {
+            Node<KeyT>* cur = nodes.front();
+            nodes.pop();
+
+            if (cur->left_)
+            {
+                cur->left_->parent_ = nullptr;       //! чтобы в деструкторе не пытались обратиться к удаленным родителям
+                nodes.push(cur->left_);
+            }
+            if (cur->right_)
+            {
+                cur->right_->parent_ = nullptr;
+                nodes.push(cur->right_);
+            }
+            delete cur;
+        }
+    }
+
+    Node<KeyT>* copy_tree(const Node<KeyT>* source, Node<KeyT>* parent)
+    {
+        if(!source)
+            return nullptr;
+
+        Node<KeyT>* new_node = new Node<KeyT>(*source);
+        new_node->parent_ = parent;     //тот, что мы передаем
+
+        new_node->left_ = copy_tree(source->left_, new_node);
+        new_node->right_ = copy_tree(source->right_, new_node);
+
+        return new_node;
+    }
 
     void left_rotate(Node<KeyT>* root)       //здесь скорее local root
     {
@@ -83,8 +159,8 @@ private:
         root->parent_ = new_root;
     }
 
-public:
-    void balance(Node<KeyT>* node)   //укоротить
+
+    /*void balance(Node<KeyT>* node)   //укоротить
     {
         Node<KeyT>* uncle;
         if (is_parent_right(node))
@@ -129,75 +205,98 @@ public:
             node->parent_->left_.colour_ = RED;
             return;
         }
-    }
+    }*/
 
+public:
     void add_node(KeyT key)
     {
-        Node<KeyT> new_node{key};
+        //!Node<KeyT> new_node{key};     ! неполучится, создается объект на стеке
+        Node<KeyT>* new_node = new Node<KeyT>(key);
 
-        Node<KeyT>* parent = find_parent(new_node);
+        if (!root_)
+        {
+            root_ = new_node;
+            root_->colour_ = BLACK;
+        }
+
+        Node<KeyT>* parent = find_parent(new_node->key_);
+        if (!parent)
+        {
+            delete new_node;
+            return;
+        }
+
+        new_node->parent_ = parent;
+
         if (parent->key_ > key)
             parent->left_ = new_node;
-        else if (parennt->key_ < key)
+        else if (parent->key_ < key)
             parent->right_ = new_node;
 
-        new_node.parent_ = parent;
-        balance(parent->parent_);        //так ведь? по идее набольшая проблема может быть с дедушкой
-            
-        //if(!root)      //если до этого не было корня, если это самая первая нода
-        //{     //это можно в функцию баланс включить
-        //    new_node.colour_ = BLACK;
-        //}
-    }
-
-    Node<KeyT>* find_parent(Node<KeyT> node)      //ссылка же провиснет, если попытаться ее вернуть
-    {
-        Node<KeyT>* possible_parent = root_;
-
-        while (possible_parent.right_ || possible_parent.left_)     //если есть место хоть куда нибудь сходить
-        {
-            //это точно можно сделать красивее, надо подумать
-            if (possible_parent.left_ && possible_parent.key_ > node.key_)
-                possible_parent = possible_parent.left_;
-            else if (!possible_parent.left_ && possible_parent.key_ > node.key_)
-                return posiible_parent;
-            else if (possible_parent.right_ && possible_parent.key_ < node.key_)
-                possible_parent = possible_parent.right_;
-            else if (!possible_parent.right_ && possible_parent.key_ < node.key_)
-                return possible_parent;
-            else
-            {
-                //может, исключение кинуть, что попалась нода с тем же значением, что пытаются вставить
-                //хотя, нет, наверное, легче вернуть нуллптр, но его так долго тянуть, нет?
-            }
-        }
         
-        return nullptr;
+        //balance(parent->parent_);
     }
 
-    void print_tree()
+    //!!Node<KeyT>* find_parent(Node<KeyT> node)      //ссылка же провиснет, если попытаться ее вернуть
+    Node<KeyT>* find_parent(KeyT key)
     {
-        //ну, чтобы было ясно что происходит, функция для отладки, нужно написать какой-нибудь из обходов
+        
+        Node<KeyT>* current = root_;
+        Node<KeyT>* parent = nullptr;
+    
+        while (current)
+        {
+            parent = current;
+
+            if (key == current->key_)
+                throw std::invalid_argument("double key");
+            else if (key < current->key_)
+                current = current->left_;
+            else  // key > current->key_
+                current = current->right_;
+        }
+        return parent;
     }
+
+    /*void print_tree()
+    {
+        if (!root_)
+            return;
+
+        std::queue<Node<KeyT>*> nodes;
+        nodes.push(root_);
+
+        while (!nodes.empty())
+        {
+            Node<KeyT>* cur = nodes.front();
+            nodes.pop();
+
+            if (cur->left_)
+                nodes.push(cur->left_);
+            if (cur->right_)
+                nodes.push(cur->right_);
+            cur->print_node();
+        }
+    }*/
 
 private:
 
-    bool is_parent_right(Node* node) const
+    bool is_parent_right(Node<KeyT>* node) const
     {
-        return node->parent_ == node->parent_->parent_->right_
+        return node->parent_ == node->parent_->parent_->right_;
     }
 
-    bool is_parent_left(Node* node) const 
+    bool is_parent_left(Node<KeyT>* node) const 
     {
         return node->parent_ == node->parent_->parent_->left_;
     }
 
-    bool is_node_right(Node* node) const 
+    bool is_node_right(Node<KeyT>* node) const 
     {
         return node == node->parent_->right_;
     }
 
-    bool is_node_left(Node* node) const 
+    bool is_node_left(Node<KeyT>* node) const 
     {
         return node == node->parent_->left_;
     }

@@ -1,0 +1,3 @@
+/home/gnnpdr/Рабочий стол/tree_cpp/build/CMakeFiles/rbtree_tests.dir
+/home/gnnpdr/Рабочий стол/tree_cpp/build/CMakeFiles/edit_cache.dir
+/home/gnnpdr/Рабочий стол/tree_cpp/build/CMakeFiles/rebuild_cache.dir
