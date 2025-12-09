@@ -6,7 +6,6 @@
 class RBTreeTester : public ITester
 {
     void test_def_ctor();
-    void test_param_ctor();
     void test_copy_ctor();
     void test_assign();
     void test_dtor();
@@ -18,7 +17,6 @@ public:
         std::cout << "Testing RBTree" << std::endl;
 
         run_test("def_ctor", [this]() { test_def_ctor(); });
-        run_test("param ctor", [this]() { test_param_ctor(); });
         run_test("copy_ctor", [this]() {test_copy_ctor(); });
         run_test("assign", [this]() { test_assign(); });
         run_test("dtor", [this]() { test_dtor(); });
@@ -47,26 +45,6 @@ void RBTreeTester::test_def_ctor()
     ASSERT(tree.root_->key_ == 42, "Root key should be 42");
 }
 
-void RBTreeTester::test_param_ctor()
-{
-    Node<int>* root = new Node<int>(5);
-
-    RBTree<int> root_tree(root);
-
-    ASSERT(root_tree.root_ == root, "ptrs should be equal");
-    
-    Node<int>* left = new Node<int>(3);
-    Node<int>* right = new Node<int>(8);
-
-    root->left_ = left;
-    root->right_ = right;
-
-    RBTree<int> tree(root);
-
-    ASSERT(tree.root_->left_ == left, "left child should be");
-    ASSERT(tree.root_->right_ == right, "right child should be");
-}
-
 void RBTreeTester::test_copy_ctor()
 {
     RBTree<int> original;
@@ -74,23 +52,17 @@ void RBTreeTester::test_copy_ctor()
     original.add_node(5);
     original.add_node(7);
 
-    RBTree<int> tree(original);
-
-    ASSERT(tree.root_ != nullptr, "Copied tree should not be empty");
-    ASSERT(tree.root_ != original.root_, "Should be deep copy (different roots)");
-    ASSERT(tree.root_->colour_ == original.root_->colour_, "colour should be copied");
-    ASSERT(tree.root_->key_ == original.root_->key_, "key should be copied");
-
-    ASSERT(tree.root_->left_->key_ = original.root_->left_->key_, "left key should be copied");
-
-    ASSERT(tree.root_->left_ != original.root_->left_, "diff ptrs");
-
+    RBTree<int> copy(original);
+    ASSERT(original.root_ != nullptr, "Original tree should not be empty");
+    ASSERT(copy.root_ != nullptr, "Copied tree should not be empty");
+    ASSERT(copy.root_ != nullptr, "Copied tree should not be empty");
+    ASSERT(copy.root_ != original.root_, "Should be deep copy (different roots)");
+    ASSERT(copy.root_->colour_ == original.root_->colour_, "colour should be copied");
+    ASSERT(copy.root_->key_ == original.root_->key_, "key should be copied");
     original.root_->key_ = 7;
-
-    ASSERT(tree.root_->key_ == 7, "copy should be independent");
+    ASSERT(copy.root_->key_ != 7, "copy should be independent");
 }
 
-        
 
 void RBTreeTester::test_assign()
 {

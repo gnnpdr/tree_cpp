@@ -51,8 +51,8 @@ public:
     Node<KeyT>* root_ = nullptr;
 
     RBTree() {};
-    explicit RBTree(Node<KeyT>* root) : root_(root) {};
 
+    //параметрический конструктор от узла не имеет смысла
     RBTree(const RBTree& other)
     {
         if (other.root_)
@@ -81,6 +81,7 @@ private:
     {
         if (!root)
             return;
+
         std::queue<Node<KeyT>*> nodes;
         nodes.push(root);
 
@@ -89,17 +90,21 @@ private:
             Node<KeyT>* cur = nodes.front();
             nodes.pop();
 
-            if (cur->left_)
-            {
-                cur->left_->parent_ = nullptr;       //! чтобы в деструкторе не пытались обратиться к удаленным родителям
-                nodes.push(cur->left_);
-            }
-            if (cur->right_)
-            {
-                cur->right_->parent_ = nullptr;
-                nodes.push(cur->right_);
-            }
+            Node<KeyT>* left = cur->left_;
+            Node<KeyT>* right = cur->right_;
+
             delete cur;
+
+            if (left)
+            {
+                left->parent_ = nullptr;
+                nodes.push(left);
+            }
+            if (right)
+            {
+                right->parent_ = nullptr;
+                nodes.push(right);
+            }
         }
     }
 
@@ -117,7 +122,7 @@ private:
         return new_node;
     }
 
-    void left_rotate(Node<KeyT>* root)       //здесь скорее local root
+    void left_rotate(Node<KeyT>* root)
     {
         Node<KeyT>* new_root = root->right_;
         root->right_ = new_root->left_;
@@ -215,8 +220,10 @@ public:
 
         if (!root_)
         {
+            //printf("!root\n");
             root_ = new_node;
             root_->colour_ = BLACK;
+            return;
         }
 
         Node<KeyT>* parent = find_parent(new_node->key_);
@@ -240,7 +247,7 @@ public:
     //!!Node<KeyT>* find_parent(Node<KeyT> node)      //ссылка же провиснет, если попытаться ее вернуть
     Node<KeyT>* find_parent(KeyT key)
     {
-        
+        //printf("find parent\n");
         Node<KeyT>* current = root_;
         Node<KeyT>* parent = nullptr;
     

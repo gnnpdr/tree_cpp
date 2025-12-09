@@ -206,3 +206,10 @@ CMakeFiles/rbtree_tests.dir/main.cpp.o
  /usr/lib/gcc/x86_64-linux-gnu/14/include/stdarg.h
  /usr/lib/gcc/x86_64-linux-gnu/14/include/stddef.h
 
+rbtree_tests
+ /lib/x86_64-linux-gnu/libm.so.6
+ /lib64/ld-linux-x86-64.so.2
+ /usr/lib/x86_64-linux-gnu/libc.so
+ /usr/lib/x86_64-linux-gnu/libm.so
+ /usr/lib/gcc/x86_64-linux-gnu/14/libgcc_s.so
+

@@ -205,6 +205,20 @@ CMakeFiles/rbtree_tests.dir/main.cpp.o: /home/gnnpdr/Рабочий\ стол/tr
   /usr/lib/gcc/x86_64-linux-gnu/14/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/14/include/stddef.h
 
+rbtree_tests: /lib/x86_64-linux-gnu/libm.so.6 \
+  /lib64/ld-linux-x86-64.so.2 \
+  /usr/lib/x86_64-linux-gnu/libc.so \
+  /usr/lib/x86_64-linux-gnu/libm.so \
+  /usr/lib/gcc/x86_64-linux-gnu/14/libgcc_s.so
+
+
+/usr/lib/x86_64-linux-gnu/libm.so:
+
+/usr/lib/x86_64-linux-gnu/libc.so:
+
+/lib64/ld-linux-x86-64.so.2:
+
+/lib/x86_64-linux-gnu/libm.so.6:
 
 /usr/lib/gcc/x86_64-linux-gnu/14/include/stddef.h:
 
@@ -457,6 +471,8 @@ CMakeFiles/rbtree_tests.dir/main.cpp.o: /home/gnnpdr/Рабочий\ стол/tr
 /usr/include/c++/14/bits/functexcept.h:
 
 /usr/include/x86_64-linux-gnu/bits/byteswap.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/14/libgcc_s.so:
 
 /usr/include/c++/14/bits/exception_ptr.h:
 
