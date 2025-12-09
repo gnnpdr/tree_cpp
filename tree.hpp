@@ -40,7 +40,7 @@ struct Node
 
     void print_node()
     {
-        std::cout << "// key " << key_ << ", colour " << colour_ << "//" << std::endl; 
+        printf("%d %d", key_, colour_); 
     }
 };
 
@@ -164,53 +164,62 @@ private:
         root->parent_ = new_root;
     }
 
-
-    /*void balance(Node<KeyT>* node)   //укоротить
+    void balance(Node<KeyT>* node)
     {
-        Node<KeyT>* uncle;
-        if (is_parent_right(node))
-            uncle = node->parent_->parent_->left_;
-        else if (is_parent_left(node))
-            uncle = node->parent_->parent_->right_;
+        while (node != root_ && node->parent_->colour_ == RED)
+        {
+            if (is_parent_left(node))
+            {
+                Node<KeyT>* uncle = node->parent_->parent_->right_;
 
-        if (uncle->colour_ == RED)
-        {
-            recolour(root_);
-            return;
+                if (uncle && uncle->colour_ == RED)
+                {
+                    node->parent_->colour_ = BLACK;
+                    uncle->colour_ = BLACK;
+                    node->parent_->parent_->colour_ = RED;
+                    node = node->parent_->parent_;
+                }
+                else
+                {
+                    if (node == node->parent_->right_)
+                    {
+                        node = node->parent_;
+                        left_rotate(node);
+                    }
+
+                    node->parent_->colour_ = BLACK;
+                    node->parent_->parent_->colour_ = RED;
+                    right_rotate(node->parent_->parent_);
+                }
+            }
+            else
+            {
+                Node<KeyT>* uncle = node->parent_->parent_->left_;
+
+                if (uncle && uncle->colour_ == RED)
+                {
+                    node->parent_->colour_ = BLACK;
+                    uncle->colour_ = BLACK;
+                    node->parent_->parent_->colour_ = RED;
+                    node = node->parent_->parent_;
+                }
+                else
+                {
+                    if (node == node->parent_->left_)
+                    {
+                        node = node->parent_;
+                        right_rotate(node);
+                    }
+
+                    node->parent_->colour_ = BLACK;
+                    node->parent_->parent_->colour_ = RED;
+                    left_rotate(node->parent_->parent_);
+                }
+            }
         }
 
-        if (is_parent_left(node) && is_node_right(node))
-        {
-            left_rotate(node->parent_);
-            right_rotate(node);
-            node->colour_ = BLACK;
-            node->left_.colour_ = RED;
-            return;
-        }
-        else if (is_parent_right(node) && is_node_left(node))
-        {
-            right_rotate(node->parent);
-            left_rotate(node);
-            node->colour_ = BLACK;
-            node->right_.colour_ = RED;
-            return;
-        }
-
-        if (is_node_left(node))
-        {
-            right_rotate(node->parent_);
-            node->parent_->colour_ = BLACK;
-            node->parent_->right_.colour_ = RED;
-            return;
-        }
-        else
-        {
-            left_rotate(node->parent_);
-            node->parent_->colour_ = BLACK;
-            node->parent_->left_.colour_ = RED;
-            return;
-        }
-    }*/
+        root_->colour_ = BLACK;
+    }
 
 public:
     void add_node(KeyT key)
@@ -241,7 +250,7 @@ public:
             parent->right_ = new_node;
 
         
-        //balance(parent->parent_);
+        balance(new_node);
     }
 
     //!!Node<KeyT>* find_parent(Node<KeyT> node)      //ссылка же провиснет, если попытаться ее вернуть
@@ -265,26 +274,19 @@ public:
         return parent;
     }
 
-    /*void print_tree()
+    void print_tree(Node<KeyT>* node)
     {
-        if (!root_)
+        if (!node)
             return;
-
-        std::queue<Node<KeyT>*> nodes;
-        nodes.push(root_);
-
-        while (!nodes.empty())
-        {
-            Node<KeyT>* cur = nodes.front();
-            nodes.pop();
-
-            if (cur->left_)
-                nodes.push(cur->left_);
-            if (cur->right_)
-                nodes.push(cur->right_);
-            cur->print_node();
-        }
-    }*/
+        
+        printf("(");
+        node->print_node();
+        if (node->left_)
+            print_tree(node->left_);
+        if (node->right_)
+            print_tree(node->right_);
+        printf(")");
+    }
 
 private:
 

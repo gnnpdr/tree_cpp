@@ -10,6 +10,7 @@ class RBTreeTester : public ITester
     void test_assign();
     void test_dtor();
     void test_add_node();
+    void test_balance();
 
 public:
     void run_all_tests() override
@@ -21,6 +22,7 @@ public:
         run_test("assign", [this]() { test_assign(); });
         run_test("dtor", [this]() { test_dtor(); });
         run_test("add_node", [this]() {test_add_node(); });
+        run_test("balance", [this] () { test_balance(); });
     }
 
     void print_results() const override
@@ -78,9 +80,7 @@ void RBTreeTester::test_assign()
         
     ASSERT(tree2.root_ != nullptr, "Assigned tree should not be empty");
     ASSERT(tree2.root_ != tree1.root_, "Should be deep copy");
-        
-    //tree1 = tree1;
-    //ASSERT(check_rb_properties(tree1), "Self-assignment should keep tree valid");
+
         
     RBTree<int> tree3;
     tree3.add_node(100);
@@ -120,144 +120,56 @@ void RBTreeTester::test_add_node()
 {
     RBTree<int> tree;
         
-    // Вставка первого узла (становится корнем)
     tree.add_node(50);
     ASSERT(tree.root_ != nullptr, "Root should exist");
     ASSERT(tree.root_->key_ == 50, "Root key should be 50");
     ASSERT(tree.root_->colour_ == BLACK, "Root must be black");
         
-    // Вставка второго узла
     tree.add_node(30);
     ASSERT(tree.root_->left_ != nullptr, "Left child should exist");
     ASSERT(tree.root_->left_->key_ == 30, "Left child key should be 30");
         
-    // Вставка третьего узла
     tree.add_node(70);
     ASSERT(tree.root_->right_ != nullptr, "Right child should exist");
-        
-    // Попытка вставить дубликат
-    try
-    {
-        tree.add_node(50);  // Дубликат
-        THROW_TEST_FAIL("Should handle duplicate insertion");
-    }
-    catch (const std::exception&)
-    {
-        // Ожидаемое поведение - либо игнорировать, либо бросать исключение
-    }
 }
-    
-    // Тест 7: Проверка свойств красно-черного дерева
-/*    void test_properties()
-    {
-        RBTree<int> tree;
-        
-        // Заполняем дерево
-        std::vector<int> values = {50, 30, 70, 20, 40, 60, 80, 10, 90};
-        for (int val : values)
-        {
-            tree.add_node(val);
-        }
-        
-        // Проверяем свойства
-        ASSERT(check_rb_properties(tree), "Tree should satisfy all RB properties");
-        
-        // Специфические проверки:
-        // 1. Корень черный
-        ASSERT(tree.root_->colour_ == BLACK, "Root must be black");
-        
-        // 2. Нет двух красных узлов подряд
-        ASSERT(check_no_double_red(tree.root_), "No double red nodes");
-        
-        // 3. Все листья (nullptr) считаются черными
-        // 4. Все пути содержат одинаковое количество черных узлов
-        int black_height = -1;
-        ASSERT(check_black_height(tree.root_, 0, black_height), 
-               "Black height should be consistent");
-    }
-    
-    // Тест 8: Балансировка
-    void test_balance()
-    {
-        // Тест 1: Случай когда дядя красный
-        RBTree<int> tree1;
-        tree1.add_node(50);  // Корень черный
-        tree1.add_node(30);  // Красный
-        tree1.add_node(70);  // Красный (дядя для следующих)
-        tree1.add_node(20);  // Красный, вызывает перекрашивание
-        
-        // После вставки 20:
-        // - 30 и 70 должны стать черными
-        // - 50 должен стать красным, но потом стать черным (корень)
-        ASSERT(tree1.root_->colour_ == BLACK, "Root should be black");
-        if (tree1.root_->left_)
-            ASSERT(tree1.root_->left_->colour_ == BLACK, "Parent should be black after recoloring");
-        
-        // Тест 2: Лево-правый случай (left-right)
-        RBTree<int> tree2;
-        tree2.add_node(50);
-        tree2.add_node(30);
-        tree2.add_node(40);  // Вызывает левый поворот, затем правый
-        
-        ASSERT(check_rb_properties(tree2), "Tree should be balanced after left-right case");
-        
-        // Тест 3: Право-левый случай (right-left)
-        RBTree<int> tree3;
-        tree3.add_node(50);
-        tree3.add_node(70);
-        tree3.add_node(60);  // Вызывает правый поворот, затем левый
-        
-        ASSERT(check_rb_properties(tree3), "Tree should be balanced after right-left case");
-    }
-    
-private:
-    // Вспомогательные функции проверки свойств
-    
-    bool check_rb_properties(RBTree<int>& tree)
-    {
-        if (!tree.root_) return true;
-        
-        // Корень черный
-        if (tree.root_->colour_ != BLACK) return false;
-        
-        // Нет двух красных подряд
-        if (!check_no_double_red(tree.root_)) return false;
-        
-        // Одинаковая черная высота
-        int black_height = -1;
-        return check_black_height(tree.root_, 0, black_height);
-    }
-    
-    bool check_no_double_red(Node<int>* node)
-    {
-        if (!node) return true;
-        
-        if (node->colour_ == RED)
-        {
-            if (node->left_ && node->left_->colour_ == RED) return false;
-            if (node->right_ && node->right_->colour_ == RED) return false;
-        }
-        
-        return check_no_double_red(node->left_) && 
-               check_no_double_red(node->right_);
-    }
-    
-    bool check_black_height(Node<int>* node, int current, int& first_height)
-    {
-        if (!node)
-        {
-            current++;  // nullptr считается черным
-            if (first_height == -1)
-            {
-                first_height = current;
-                return true;
-            }
-            return current == first_height;
-        }
-        
-        int new_height = current + (node->colour_ == BLACK ? 1 : 0);
-        
-        return check_black_height(node->left_, new_height, first_height) &&
-               check_black_height(node->right_, new_height, first_height);
-    }
-};*/
+
+void RBTreeTester::test_balance()
+{
+    RBTree<int> tree;
+    tree.add_node(1);
+    ASSERT(tree.root_->colour_ == BLACK, "1 root should be black");
+    tree.add_node(2);
+    ASSERT(tree.root_->colour_ == BLACK, "2 root should be black");
+    ASSERT(tree.root_->right_->key_ == 2, "sh 2");
+    ASSERT(tree.root_->right_->colour_ == RED, "sh RED");
+    tree.add_node(3);
+    ASSERT(tree.root_->colour_ == BLACK, "3 root should be black");
+    ASSERT(tree.root_->key_ == 2, "root sh 2");
+    ASSERT(tree.root_->right_->colour_ == RED, "right sh RED");
+    ASSERT(tree.root_->right_->key_ == 3, "right sh 3");
+    ASSERT(tree.root_->left_->colour_ == RED, "left sh RED");
+    ASSERT(tree.root_->left_->key_ == 1, "left sh 1");
+    tree.add_node(4);
+    ASSERT(tree.root_->colour_ == BLACK, "4 root should be black");
+    ASSERT(tree.root_->key_ == 2, "root sh 2");
+    ASSERT(tree.root_->right_->colour_ == BLACK, "right sh BLACK");
+    ASSERT(tree.root_->right_->key_ == 3, "right sh 3");
+    ASSERT(tree.root_->right_->right_->colour_ == RED, "right right sh RED");
+    ASSERT(tree.root_->right_->right_->key_ == 4, "right right sh 4");
+    ASSERT(tree.root_->left_->colour_ == BLACK, "left sh BLACK");
+    ASSERT(tree.root_->left_->key_ == 1, "left sh 1");
+    tree.add_node(5);
+    ASSERT(tree.root_->colour_ == BLACK, "5 root should be black");
+    ASSERT(tree.root_->key_ == 2, "root sh 2");
+    ASSERT(tree.root_->right_->colour_ == BLACK, "right sh BLACK");
+    ASSERT(tree.root_->right_->key_ == 4, "right sh 4");
+    ASSERT(tree.root_->right_->right_->colour_ == RED, "right right sh RED");
+    ASSERT(tree.root_->right_->right_->key_ == 5, "right right sh 5");
+    ASSERT(tree.root_->right_->left_->colour_ == RED, "right left sh RED");
+    ASSERT(tree.root_->right_->left_->key_ == 3, "right left sh 3");
+    ASSERT(tree.root_->left_->colour_ == BLACK, "left sh BLACK");
+    ASSERT(tree.root_->left_->key_ == 1, "left sh 1");
+
+    tree.print_tree(tree.root_);
+
+}
